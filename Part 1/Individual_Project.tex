@@ -1,0 +1,173 @@
+\documentclass[11pt]{article}
+
+% --- Packages ---
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage[T1]{fontenc}
+\usepackage[scaled=0.85]{inconsolata}
+\usepackage{setspace} % double spacing
+\usepackage{etoolbox} % ensure spacing inside environments
+\usepackage[dvipsnames]{xcolor}
+
+% --- Double spacing ---
+\doublespacing
+\AtBeginEnvironment{lstlisting}{\doublespacing}
+
+\lstdefinestyle{pycool}{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\bfseries\color{RoyalBlue},
+  commentstyle=\itshape\color{Gray},
+  stringstyle=\color{ForestGreen},
+  numberstyle=\tiny\color{Gray},
+  numbers=left,
+  numbersep=10pt,
+  showstringspaces=false,
+  tabsize=2,
+  breaklines=true,
+  frame=single,
+  framerule=0.6pt,
+  rulecolor=\color{black!25},
+  backgroundcolor=\color{black!3},
+  xleftmargin=1.25em,
+  xrightmargin=0.5em,
+  captionpos=b
+}
+
+\title{Project for Introduction to Operation Research \\
+Deadline December 9th}
+\date{}
+\begin{document}
+\maketitle
+
+
+
+\textbf{Submission requirement.} Send (\textit{i}) a runnable Jupyter notebook (\texttt{.ipynb}) containing the implemented code and answers to the coding exercise (referred to as \textbf{Part 1} bellow); sample source code (\texttt{source\_code.ipynb}) with both Gurobi and \LaTeX code is available on OLAT. You should directly modify this notebook file. (\textit{ii}) A PDF (written in \LaTeX) with your answers to the modeling exercise (referred to as \textbf{Part 2} bellow) in \LaTeX. Focus on both the modeling and the explanations. Clear reasoning earns points. You do not need to match any ``official'' answer to receive full points (a \LaTeX~file of this project description can be used as a template).
+
+ 
+
+\looseness-1 \textbf{Motivation.} Swiss Post runs last-mile delivery in Swiss cities and in the mountains. Think of a weekday morning in Zürich. At \(07{:}30\) a yellow van leaves the depot near the edge of the city. The driver has about \(35\text{-}40\) stops: a few cafés that want parcels before the morning rush, some apartment buildings with intercoms, two parcel lockers, and one medical parcel that must arrive on time. The streets are narrow in the old town. Many are one-way. Trams have priority. The van is electric, so the team also monitors range and schedules a short break. The van must be back by \(12{:}45\) to reload. In this assignment, we optimize the delivery plan for a single day for Swiss Post. To learn the basics, we use the Traveling Salesman Problem (TSP): find the fastest tour that starts and ends at the depot and visits each stop exactly once. This abstract problem gives a clean model and clear intuition about visit order and total travel time.
+
+
+\newpage
+
+\textbf{Part 1 (Coding exercise). }As a first abstraction of the problem, we consider the Traveling Salesman Problem. You are given several locations and want a single \text{round trip} that visits each location exactly once and returns to where you started. Roads have no direction, so traveling between two locations costs the same in either way. Because every pair of locations is directly connected, the question is simply: in what order should you visit the locations to keep the total travel time as small as possible? In the undirected case, any starting point is equivalent; one may still label a specific node as the ``depot'' for implementation or presentation.
+
+Let \(G=\left(V,A\right)\) be a complete directed graph on \(n=\lvert V\rvert\) locations. Vertices are \(V=\left\{0,\ldots,n-1\right\}\) with node \(0\) denoting the depot. Vertices are \(A=\left\{(i,j)\in V\times V:\,i\ne j\right\}\). Travel time on \(\left(i,j\right)\) is given by \(c_{ij}>0\), for all $i \neq j \in V$.  
+ 
+
+\noindent\textbf{Question~1 (2 points): MTZ TSP.} Formulate the Traveling Salesman Problem as a mixed integer linear program using the Miller–Tucker–Zemlin (MTZ) formulation (clearly indicate your decision variables, objective function, constraints). Then, in at most \(150\) words, explain why solving your MTZ model returns the shortest round trip (i.e., why the constraints eliminate subtours and the objective selects a minimum–cost tour). Write all parts of your answer in \textbf{indicated cell of the Jupyter notebook}.
+
+ 
+
+% \noindent\textbf{Question 2 (2 points): DFJ TSP and why it works. }Write the directed TSP as a mixed–integer linear program using the Dantzig–Fulkerson–Johnson (DFJ) formulation. In at most \(150\) words, explain why solving your DFJ model returns the \emph{shortest} Hamiltonian tour.
+
+
+\medskip
+
+\noindent\textbf{Question 2 (8 points). }Implement and solve two TSP models in Python with Gurobi on the starter instance provided in the Jupyter notebook on OLAT:
+\begin{enumerate}[label=(\alph*), leftmargin=2em]
+  \item \textbf{MTZ formulation:} implement it yourself using your model from Question~1.
+  \item \textbf{DFJ formulation:} use the implementation provided in the Jupyter notebook on OLAT.
+\end{enumerate}
+For \emph{each} model, report:
+\begin{itemize}
+  \item the optimal tour (list the nodes in visiting order, starting and ending at the depot),
+  \item the optimal total travel time,
+  \item the solver runtime (wall‐clock seconds).
+\end{itemize}
+Compare the results: Are the optimal tours identical? If not, justify. If the runtimes differ, explain why. Write all answers in the same Jupyter notebook.
+
+
+
+
+
+
+ 
+
+% \newpage
+
+% \begin{lstlisting}[style=pycool,caption={Code baseline},label={lst:mtz_v1}]
+
+% import math
+% import random
+% import time
+% import itertools
+% from typing import Dict, List, Tuple, Any
+
+% try:
+%     import gurobipy as gp
+%     from gurobipy import GRB
+%     GUROBI_OK = True
+% except Exception as e:
+%     GUROBI_OK = False
+%     print("WARNING: gurobipy is not available in this environment.\n"
+%           "Install Gurobi and ensure your license is set up to run the solves.")
+          
+% # ------------------ Data: reproducible Euclidean instance ------------------
+% random.seed(42)
+
+% def generate_instance(n: int = 16, seed: int = 42):
+%     random.seed(seed)
+%     coords = [(random.uniform(0, 100), random.uniform(0, 100)) for _ in range(n)]
+%     V = list(range(n))
+%     def dist(i, j):
+%         if i == j: return 0.0
+%         (xi, yi), (xj, yj) = coords[i], coords[j]
+%         return float(math.hypot(xi - xj, yi - yj))
+%     C = {(i, j): dist(i, j) for i in V for j in V if i != j}
+%     return V, C, coords
+% \end{lstlisting}
+
+% \newpage
+
+
+\newpage
+
+\textbf{Part 2 (Modeling exercise).} Swiss Post’s real planning is far more complex than the TSP you just studied. It is a Vehicle Routing Problem (VRP): multiple vans, each with a load limit; some customers have time windows; drivers must take a break; electric vehicles (EVs) may need a quick top-up charge; there may be pickups on the way back; and parcel lockers might have to be served in a single visit. VRP adds these constraints coming on top of the touring problem. Instead of one tour as in the TSP, we have one per vehicle; we enforce load limits along each route; we keep time windows and the break; and we decide which vehicle serves each stop. In short, TSP determines \emph{order}; VRP adds \emph{who}, \emph{when}, and \emph{under which limits}.
+
+\textbf{Use case at a glance.} To simplify, assume the van visits \(n\in\left[10,20\right]\) stops:
+(\textit{i}) morning \emph{B2B} customers (cafés, pharmacies, print shops);
+(\textit{ii}) \emph{B2C} apartments with intercom access;
+(\textit{iii}) two \emph{PickPost} parcel lockers;
+(\textit{iv}) one \emph{medical} delivery requiring temperature control.
+The van can drive about \(120\) km per charge and can carry \(Q=120\) volume units (VU).
+Service times vary: \(\tau_{i}\in\left[2,3\right]\) minutes for locker drops, \(\tau_{i}\in\left[5,7\right]\) for normal parcels, and \(\tau_{i}\in\left[9,12\right]\) for ID/signature. Intercoms or elevators can add \(1\text{--}3\) minutes.
+
+\textbf{Simple operational rules.} In addition to the constraints above, Swiss Post may incorporate practical rules. A \emph{soft time window} allows arrivals outside the interval but penalises them; a \emph{hard time window} requires arrivals within the interval. For example:
+\begin{spacing}{1.5}
+\begin{itemize}[leftmargin=2em,itemsep=0.25ex,topsep=0.25ex,parsep=0pt,partopsep=0pt]
+  \item \emph{Start, end, and break.} The driver must leave at \(07{:}30\) and return by \(12{:}45\). Each driver takes one \(15\)-minute break between \(10{:}30\) and \(11{:}30\) (at any stop).
+  \item \emph{Time windows.} B2B: soft window \(08{:}00\text{--}11{:}00\) (early/late discouraged). Medical: hard window \(09{:}30\text{--}10{:}15\). B2C: flexible, but arrivals after \(12{:}00\) are discouraged.
+  \item \emph{Access and parking.} Some old-town streets close to vehicles after \(10{:}00\). Unloading are allowed for short stops (about \(10\) minutes).
+  \item \emph{Direction-dependent travel times.} There may be one-way streets, tram priority, and congestion that make travel times asymmetric, namely time from \(i\) to \(j\) can differ from \(j\) to \(i\). Between \(08{:}00\) and \(09{:}00\), some streets are about \(15\%\) slower due to the traffic.
+  \item \emph{Restricted corridors.} Certain lanes (e.g., bus lanes) can shorten travel.
+  \item \emph{and so on ...}
+\end{itemize}
+\end{spacing}
+
+
+\noindent\textbf{No coding required.} For the next part, you only need to formulate the model. No Python or Excel implementation is required. Please submit a single PDF, written in \LaTeX, with your answers to Question~3 below. Respect the length limits.
+
+\medskip
+
+\newpage
+
+\looseness-1 \noindent\textbf{Question 3 (10 points): Open modeling extension.} Choose a few real-world features that matter most for the Zürich delivery tour at Swiss Post (see examples above but feel free to incorporate something). Build a model to help Swiss Post improve its day-to-day routing operations. As a tip, you may start from the TSP model discussed in Part~1. \emph{Your answer must include:}
+\begin{enumerate}[label=(\alph*), leftmargin=2em]
+  \item \textbf{Scope (maximum \(250\) words).} Explain how you construct your model and why it is appropriate for this setting.
+  \item \textbf{Data \& parameters (maximum \(150\) words).} Introduce only the minimum necessary symbols, with units and defaults as needed. A small table is fine if helpful.
+  \item \textbf{Model (maximum 1 page).} Formulate your model as a mixed-integer linear program. Clearly state the objective function, decision variables, and constraints. Briefly explain how the MILP follows from part~(a).
+\end{enumerate}
+
+\emph{Creativity is encouraged:} pick something you care about. You do not need a perfect model to earn full points. Clear writing, well-stated assumptions, and honest trade-offs earn points. A simple but well-reasoned design can receive full points.
+
+
+
+
+
+\end{document}
